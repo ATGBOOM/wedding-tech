@@ -80,3 +80,6 @@ extraction_output.json
 
 # Logs
 *.log
+
+.wwebjs_auth/
+.wwebjs_cache/
