@@ -8,10 +8,13 @@ from pydantic import BaseModel, Field
 
 class Price(BaseModel):
     """Price information extracted from conversation."""
-    amount: float = Field(description="Numeric amount")
-    currency: str = Field(default="INR", description="Currency code")
-    type: Literal["total", "per_unit"] = Field(description="Whether price is total or per unit")
-    raw_text: str = Field(description="Original text from conversation")
+    amount: Optional[float] = Field(default=None, description="Numeric amount")
+    currency: Optional[str] = Field(default="INR", description="Currency code")
+    type: Optional[Literal["total", "per_unit", "additional"]] = Field(
+        default=None, 
+        description="Whether price is total, per unit, or additional"
+    )
+    raw_text: Optional[str] = Field(default=None, description="Original text from conversation")
 
 
 class Commitment(BaseModel):
@@ -29,7 +32,7 @@ class Commitment(BaseModel):
         default="pending",
         description="Current status of commitment"
     )
-    status_evidence: str = Field(description="Evidence from messages supporting the status")
+    status_evidence: Optional[str] = Field(default=None, description="Evidence from messages supporting the status")
     source_message_ids: list[str] = Field(
         default_factory=list,
         description="IDs of messages where this commitment was discussed"
@@ -39,14 +42,16 @@ class Commitment(BaseModel):
 class Payment(BaseModel):
     """Payment information discussed or made."""
     id: str = Field(description="Unique identifier for this payment")
-    type: Literal["advance", "partial", "full"] = Field(description="Type of payment")
-    amount: float = Field(description="Payment amount")
-    currency: str = Field(default="INR", description="Currency code")
+    type: Literal["advance", "partial", "full", "balance"] = Field(
+        description="Type of payment"
+    )
+    amount: Optional[float] = Field(default=None, description="Payment amount")
+    currency: Optional[str] = Field(default="INR", description="Currency code")
     status: Literal["discussed", "requested", "paid", "confirmed_received"] = Field(
         description="Payment status"
     )
     date: Optional[str] = Field(default=None, description="ISO date string of payment")
-    raw_text: str = Field(description="Original text from conversation")
+    raw_text: Optional[str] = Field(default=None, description="Original text from conversation")
     source_message_ids: list[str] = Field(
         default_factory=list,
         description="IDs of messages where this payment was discussed"
@@ -67,14 +72,14 @@ class OpenItem(BaseModel):
 class SuggestedFollowup(BaseModel):
     """Suggested follow-up action."""
     date: Optional[str] = Field(default=None, description="ISO date string for suggested follow-up")
-    reason: str = Field(description="Why follow-up is needed")
+    reason: Optional[str] = Field(default=None, description="Why follow-up is needed")
 
 
 class VendorSummary(BaseModel):
     """High-level summary of vendor conversation."""
-    vendor_name: str = Field(description="Vendor's name")
-    vendor_category: str = Field(description="Vendor category (e.g., florist, caterer)")
-    conversation_summary: str = Field(description="Brief summary of the conversation")
+    vendor_name: Optional[str] = Field(default=None, description="Vendor's name")
+    vendor_category: Optional[str] = Field(default=None, description="Vendor category (e.g., florist, caterer)")
+    conversation_summary: Optional[str] = Field(default=None, description="Brief summary of the conversation")
     overall_status: Literal["on_track", "needs_attention", "at_risk"] = Field(
         description="Overall status assessment"
     )

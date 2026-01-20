@@ -204,6 +204,7 @@ def validate_extraction(data: dict) -> VendorCommitmentExtraction:
         ExtractionError: If validation fails
     """
     try:
+        print("date passed to vendor commit", data)
         return VendorCommitmentExtraction(**data)
     except Exception as e:
         raise ExtractionError(f"Schema validation failed: {e}")
