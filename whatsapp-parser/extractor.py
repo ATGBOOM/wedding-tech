@@ -15,7 +15,7 @@ from prompts import build_extraction_prompt
 
 
 # Configuration
-DEFAULT_MODEL = "llama-3.1-70b-versatile"
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 FALLBACK_MODEL = "llama-3.1-8b-instant"
 TEMPERATURE = 0.1
 
@@ -25,16 +25,92 @@ class ExtractionError(Exception):
     pass
 
 
-def build_llm_payload(parsed_conversation: dict) -> dict:
+def is_relevant_message(content: str) -> bool:
+    """
+    Filter out low-value messages to reduce token usage.
+
+    Args:
+        content: Message text content
+
+    Returns:
+        True if message should be included in LLM payload
+    """
+    if not content:
+        return False
+
+    content_lower = content.lower()
+
+    # Skip standalone greetings/acknowledgments (1-2 words with no substance)
+    standalone_fillers = ["ok", "okay", "ji", "yes", "ha", "han", "haan", "thik", "theek"]
+    if content_lower.strip() in standalone_fillers:
+        return False
+
+    # Keep messages with commitment/business keywords
+    commitment_keywords = [
+        # Confirmations
+        "pakka", "done", "confirm", "ho jayega", "thik hai", "bilkul", "zaroor", "ban jayega",
+        # Negations/Issues
+        "nahi", "cancel", "mushkil", "impossible", "problem",
+        # Temporal
+        "kal", "parso", "hafte", "tak", "pehle", "baad", "jaldi", "date", "time",
+        # Money/Numbers
+        "rupaye", "rs", "₹", "hazaar", "lakh", "sau", "price", "rate", "advance", "payment", "pay",
+        # Questions (usually important)
+        "?", "kya", "kab", "kitna", "kaise", "kahan", "kaun",
+        # Business terms
+        "book", "booking", "menu", "setup", "deliver", "service"
+    ]
+
+    # Keep if contains any commitment keyword
+    if any(keyword in content_lower for keyword in commitment_keywords):
+        return True
+
+    # Keep if contains numbers (prices, dates, quantities)
+    if any(char.isdigit() for char in content):
+        return True
+
+    # Skip if too short and didn't match above (likely just filler)
+    if len(content.split()) <= 2:
+        return False
+
+    # Keep everything else that's substantial
+    return True
+
+
+def build_llm_payload(parsed_conversation: dict, max_messages: int = 20) -> dict:
     """
     Extract only what LLM needs from parsed conversation.
+    Filters messages to reduce token usage while preserving key information.
 
     Args:
         parsed_conversation: Full output from parser.py
+        max_messages: Maximum number of messages to include (default: 20)
 
     Returns:
-        Minimal payload for LLM processing
+        Minimal payload for LLM processing with filtered messages
     """
+    # Filter messages for relevance
+    all_messages = [
+        {
+            "id": msg["id"],
+            "timestamp": msg["timestamp"],
+            "sender": "planner" if msg["is_planner"] else "vendor",
+            "content": msg["content"]
+        }
+        for msg in parsed_conversation["messages"]
+        if msg["content"] and msg["content_type"] == "text"  # Skip media_omitted and non-text
+    ]
+
+    # Apply relevance filter
+    filtered_messages = [
+        msg for msg in all_messages
+        if is_relevant_message(msg["content"])
+    ]
+
+    # Limit to most recent N messages if conversation is too long
+    if len(filtered_messages) > max_messages:
+        filtered_messages = filtered_messages[-max_messages:]
+
     return {
         "vendor_name": parsed_conversation["metadata"]["vendor_name"],
         "vendor_category": parsed_conversation["metadata"]["vendor_category"],
@@ -42,22 +118,13 @@ def build_llm_payload(parsed_conversation: dict) -> dict:
             "start": parsed_conversation["parsing_info"]["date_range"]["earliest"],
             "end": parsed_conversation["parsing_info"]["date_range"]["latest"]
         },
-        "messages": [
-            {
-                "id": msg["id"],
-                "timestamp": msg["timestamp"],
-                "sender": "planner" if msg["is_planner"] else "vendor",
-                "content": msg["content"]
-            }
-            for msg in parsed_conversation["messages"]
-            if msg["content"] and msg["content_type"] == "text"  # Skip media_omitted and non-text
-        ]
+        "messages": filtered_messages
     }
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=2, min=2, max=8),
+    stop=stop_after_attempt(2),
+    wait=wait_exponential(multiplier=1, min=1, max=4),
     retry=retry_if_exception_type((Exception,)),
     reraise=True
 )
@@ -78,12 +145,18 @@ def call_llm_with_retry(
     Raises:
         Exception: If all retry attempts fail
     """
-    messages = [
-        HumanMessage(content=prompt)
-    ]
+    try:
+        print("Sending request to LLM...")
+        messages = [
+            HumanMessage(content=prompt)
+        ]
 
-    response = llm.invoke(messages)
-    return response.content
+        response = llm.invoke(messages)
+        print(f"Received response from LLM (length: {len(response.content)} chars)")
+        return response.content
+    except Exception as e:
+        print(f"LLM call failed: {type(e).__name__}: {e}")
+        raise
 
 
 def parse_llm_response(response_text: str) -> dict:
@@ -148,7 +221,6 @@ def extract_vendor_commitments(
     Args:
         parsed_conversation: Output from parser.py
         upload_date: ISO date for resolving "kal", "parso". Defaults to today.
-        model: Groq model to use. Defaults to llama-3.1-70b-versatile
         api_key: Groq API key. Defaults to GROQ_API_KEY env var
 
     Returns:
@@ -180,16 +252,18 @@ def extract_vendor_commitments(
 
     # Initialize LLM
     llm = ChatGroq(
-        api_key=api_key,
         model=model,
+        api_key=api_key,
         temperature=TEMPERATURE
     )
 
     try:
         # Call LLM with retry logic
+        print(f"\nCalling LLM (model: {model}, messages: {len(llm_payload['messages'])})...")
         response_text = call_llm_with_retry(llm, prompt)
 
         # Parse response
+        print("Parsing LLM response...")
         parsed_data = parse_llm_response(response_text)
 
         # Update metadata with actual values
@@ -199,16 +273,20 @@ def extract_vendor_commitments(
         parsed_data["extraction_metadata"]["upload_date_used"] = upload_date
 
         # Validate against schema
+        print("Validating against schema...")
         validated = validate_extraction(parsed_data)
 
+        print("✓ Extraction completed successfully")
         # Return as dict
         return validated.model_dump()
 
     except Exception as e:
+        print(f"\n✗ Error during extraction: {type(e).__name__}: {e}")
+
         # If primary model fails and we're using default, try fallback
-        if model == DEFAULT_MODEL:
+        if model == DEFAULT_MODEL and model != FALLBACK_MODEL:
             try:
-                print(f"Primary model failed: {e}. Trying fallback model {FALLBACK_MODEL}...")
+                print(f"\nRetrying with fallback model: {FALLBACK_MODEL}...")
                 return extract_vendor_commitments(
                     parsed_conversation,
                     upload_date=upload_date,

@@ -232,7 +232,7 @@ FEW_SHOT_EXAMPLES = [
                     "id": "commit_001",
                     "description": "Premium stage decoration setup",
                     "deadline_raw": "shaadi se ek din pehle",
-                    "deadline_resolved": null,
+                    "deadline_resolved": None,
                     "deadline_confidence": "low",
                     "price": {
                         "amount": 175000,
@@ -260,93 +260,6 @@ FEW_SHOT_EXAMPLES = [
                     "source_message_ids": []
                 }
             ]
-        }
-    },
-    {
-        "description": "Completed transaction with explicit date",
-        "input": {
-            "vendor_name": "Kumar DJ Services",
-            "vendor_category": "dj",
-            "conversation_date_range": {
-                "start": "2024-05-20T09:00:00+05:30",
-                "end": "2024-05-22T18:00:00+05:30"
-            },
-            "messages": [
-                {
-                    "id": "msg_001",
-                    "timestamp": "2024-05-20T09:00:00+05:30",
-                    "sender": "planner",
-                    "content": "DJ chahiye 25 June ko. 4 hours"
-                },
-                {
-                    "id": "msg_002",
-                    "timestamp": "2024-05-20T09:15:00+05:30",
-                    "sender": "vendor",
-                    "content": "Ji available hai. 30 hazaar total rahega"
-                },
-                {
-                    "id": "msg_003",
-                    "timestamp": "2024-05-20T09:30:00+05:30",
-                    "sender": "planner",
-                    "content": "Pakka done. 15k advance transfer kar raha hoon"
-                },
-                {
-                    "id": "msg_004",
-                    "timestamp": "2024-05-22T18:00:00+05:30",
-                    "sender": "vendor",
-                    "content": "Payment received. 25 June pakka block kar diya"
-                }
-            ]
-        },
-        "output": {
-            "extraction_metadata": {
-                "model": "llama-3.1-70b-versatile",
-                "extracted_at": "2024-06-15T10:00:00+05:30",
-                "conversation_messages_count": 4,
-                "upload_date_used": "2024-06-15"
-            },
-            "vendor_summary": {
-                "vendor_name": "Kumar DJ Services",
-                "vendor_category": "dj",
-                "conversation_summary": "DJ booked for June 25 for 4 hours at ₹30,000. Advance of ₹15,000 paid and confirmed received. Booking confirmed.",
-                "overall_status": "on_track",
-                "last_contact_date": "2024-05-22",
-                "suggested_followup": {
-                    "date": "2024-06-20",
-                    "reason": "Final confirmation of timing and song list before event"
-                }
-            },
-            "commitments": [
-                {
-                    "id": "commit_001",
-                    "description": "DJ services for 4 hours on wedding day",
-                    "deadline_raw": "25 June",
-                    "deadline_resolved": "2024-06-25",
-                    "deadline_confidence": "high",
-                    "price": {
-                        "amount": 30000,
-                        "currency": "INR",
-                        "type": "total",
-                        "raw_text": "30 hazaar total"
-                    },
-                    "status": "in_progress",
-                    "status_evidence": "Vendor confirmed '25 June pakka block kar diya' after receiving payment",
-                    "source_message_ids": ["msg_001", "msg_002", "msg_004"]
-                }
-            ],
-            "payments": [
-                {
-                    "id": "pay_001",
-                    "type": "advance",
-                    "amount": 15000,
-                    "currency": "INR",
-                    "status": "confirmed_received",
-                    "date": "2024-05-22",
-                    "raw_text": "15k advance transfer kar raha hoon",
-                    "source_message_ids": ["msg_003", "msg_004"]
-                }
-            ],
-            "open_items": []
         }
     }
 ]
@@ -400,11 +313,12 @@ Now extract structured information from the following conversation:
 ```
 
 Remember:
-1. Quote message evidence before making inferences
-2. Use null for fields you cannot determine
-3. Mark confidence appropriately (high/medium/low)
-4. Resolve relative dates using upload_date: {upload_date}
-5. Surface uncertainty rather than guessing
+1. Copy vendor_name and vendor_category from the input to vendor_summary
+2. Quote message evidence before making inferences
+3. Use null for fields you cannot determine
+4. Mark confidence appropriately (high/medium/low)
+5. Resolve relative dates using upload_date: {upload_date}
+6. Surface uncertainty rather than guessing
 
 Respond with ONLY valid JSON matching the schema. Do not include any explanatory text before or after the JSON."""
 
