@@ -6,11 +6,16 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
+from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage
+
+# Load environment variables from .env file
+load_dotenv()
+from langchain_core.messages import HumanMessage
+from langchain_core.exceptions import OutputParserException
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from schemas import VendorCommitmentExtraction
+from schemas import VendorExtraction
 from prompts import build_extraction_prompt
 
 
@@ -190,24 +195,6 @@ def parse_llm_response(response_text: str) -> dict:
         raise ExtractionError(f"Invalid JSON in LLM response: {e}")
 
 
-def validate_extraction(data: dict) -> VendorCommitmentExtraction:
-    """
-    Validate extraction output against Pydantic schema.
-
-    Args:
-        data: Parsed JSON from LLM
-
-    Returns:
-        Validated VendorCommitmentExtraction instance
-
-    Raises:
-        ExtractionError: If validation fails
-    """
-    try:
-        print("date passed to vendor commit", data)
-        return VendorCommitmentExtraction(**data)
-    except Exception as e:
-        raise ExtractionError(f"Schema validation failed: {e}")
 
 
 def extract_vendor_commitments(
@@ -257,29 +244,36 @@ def extract_vendor_commitments(
         api_key=api_key,
         temperature=TEMPERATURE
     )
-
+    structured_llm = llm.with_structured_output(VendorExtraction)
     try:
         # Call LLM with retry logic
-        print(f"\nCalling LLM (model: {model}, messages: {len(llm_payload['messages'])})...")
-        response_text = call_llm_with_retry(llm, prompt)
+        # print(f"\nCalling LLM (model: {model}, messages: {len(llm_payload['messages'])})...")
+        # response_text = call_llm_with_retry(llm, prompt)
 
-        # Parse response
-        print("Parsing LLM response...")
-        parsed_data = parse_llm_response(response_text)
+        # # Parse response
+        # print("Parsing LLM response...")
+        # parsed_data = parse_llm_response(response_text)
 
-        # Update metadata with actual values
-        parsed_data["extraction_metadata"]["model"] = model
-        parsed_data["extraction_metadata"]["extracted_at"] = datetime.now(timezone.utc).astimezone().isoformat()
-        parsed_data["extraction_metadata"]["conversation_messages_count"] = len(llm_payload["messages"])
-        parsed_data["extraction_metadata"]["upload_date_used"] = upload_date
+        # # Update metadata with actual values
+        # parsed_data["extraction_metadata"]["model"] = model
+        # parsed_data["extraction_metadata"]["extracted_at"] = datetime.now(timezone.utc).astimezone().isoformat()
+        # parsed_data["extraction_metadata"]["conversation_messages_count"] = len(llm_payload["messages"])
+        # parsed_data["extraction_metadata"]["upload_date_used"] = upload_date
 
-        # Validate against schema
-        print("Validating against schema...")
-        validated = validate_extraction(parsed_data)
+        # # Validate against schema
+        # print("Validating against schema...")
+        # validated = validate_extraction(parsed_data)
+
+        response = structured_llm.invoke(prompt)
 
         print("✓ Extraction completed successfully")
         # Return as dict
-        return validated.model_dump()
+        return response.model_dump()
+
+    except OutputParserException as e:
+        # LLM returned something that didn't match schema
+        print(f"Parsing failed: {e}")
+        raise ExtractionError(f"LLM output didn't match schema: {e}")
 
     except Exception as e:
         print(f"\n✗ Error during extraction: {type(e).__name__}: {e}")

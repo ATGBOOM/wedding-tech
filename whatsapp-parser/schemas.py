@@ -1,107 +1,94 @@
 """
-Pydantic models for vendor commitment extraction output validation.
+Pydantic models for vendor commitment extraction - MVP version.
+Optimized for: clarity, token efficiency, and direct mapping to business needs.
 """
-from datetime import datetime
+from datetime import date
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
-class Price(BaseModel):
-    """Price information extracted from conversation."""
-    amount: Optional[float] = Field(default=None, description="Numeric amount")
-    currency: Optional[str] = Field(default="INR", description="Currency code")
-    type: Optional[Literal["total", "per_unit", "additional"]] = Field(
-        default=None, 
-        description="Whether price is total, per unit, or additional"
-    )
-    raw_text: Optional[str] = Field(default=None, description="Original text from conversation")
+class AgreedDetail(BaseModel):
+    """A specific detail that's been confirmed/agreed upon."""
+    category: str = Field(description="Type: decor, flowers, food, venue, timing, pricing, etc.")
+    detail: str = Field(description="What was agreed, e.g. 'red roses', '200 plates', 'stage setup'")
+    value: Optional[str] = Field(default=None, description="Amount/quantity if applicable, e.g. '₹500/plate', '200'")
 
 
 class Commitment(BaseModel):
-    """A vendor commitment or deliverable."""
-    id: str = Field(description="Unique identifier for this commitment")
-    description: str = Field(description="What the vendor committed to deliver")
-    deadline_raw: Optional[str] = Field(default=None, description="Original deadline text from conversation")
-    deadline_resolved: Optional[str] = Field(default=None, description="ISO date string of resolved deadline")
-    deadline_confidence: Literal["high", "medium", "low"] = Field(
-        default="low",
-        description="Confidence level in deadline resolution"
+    """Something the vendor has committed to deliver."""
+    what: str = Field(description="Brief description of the commitment")
+    by_when: Optional[str] = Field(default=None, description="Deadline if mentioned (resolved to YYYY-MM-DD if possible)")
+    when_confidence: Literal["exact", "approximate", "vague"] = Field(
+        default="vague",
+        description="exact=specific date given, approximate=relative date like 'kal', vague=unclear"
     )
-    price: Optional[Price] = Field(default=None, description="Price information if discussed")
-    status: Literal["pending", "in_progress", "completed", "cancelled"] = Field(
-        default="pending",
-        description="Current status of commitment"
+    status: Literal["agreed", "done", "cancelled"] = Field(
+        default="agreed",
+        description="agreed=confirmed but not done, done=completed, cancelled=called off"
     )
-    status_evidence: Optional[str] = Field(default=None, description="Evidence from messages supporting the status")
-    source_message_ids: list[str] = Field(
+
+
+class LooseThread(BaseModel):
+    """Something mentioned but not finalized, or trailing off."""
+    what: str = Field(description="What was discussed but not concluded")
+    blocker: Optional[str] = Field(default=None, description="Why it's unresolved, if clear")
+    urgency: Literal["high", "medium", "low"] = Field(default="medium")
+
+
+class PendingPayment(BaseModel):
+    """Payment that's been discussed or requested."""
+    amount: Optional[float] = Field(default=None, description="Amount in INR")
+    purpose: str = Field(description="e.g. 'advance', 'full payment', 'balance'")
+    status: Literal["mentioned", "requested", "promised", "paid"] = Field(
+        description="mentioned=just discussed, requested=vendor asked, promised=planner agreed, paid=confirmed paid"
+    )
+
+
+class VendorExtraction(BaseModel):
+    """
+    Complete extraction from a vendor conversation.
+    Designed for wedding planner MVP - focuses on actionable information.
+    """
+    # Identity (passed through from input)
+    vendor_name: str
+    vendor_category: str
+    
+    # Core outputs
+    summary: str = Field(
+        description="2-3 sentence overview: what's the status with this vendor?"
+    )
+    
+    agreed_details: list[AgreedDetail] = Field(
         default_factory=list,
-        description="IDs of messages where this commitment was discussed"
+        description="Specific things confirmed: decor type, flowers, counts, prices, locations, etc."
     )
-
-
-class Payment(BaseModel):
-    """Payment information discussed or made."""
-    id: str = Field(description="Unique identifier for this payment")
-    type: Literal["advance", "partial", "full", "balance"] = Field(
-        description="Type of payment"
-    )
-    amount: Optional[float] = Field(default=None, description="Payment amount")
-    currency: Optional[str] = Field(default="INR", description="Currency code")
-    status: Literal["discussed", "requested", "paid", "confirmed_received"] = Field(
-        description="Payment status"
-    )
-    date: Optional[str] = Field(default=None, description="ISO date string of payment")
-    raw_text: Optional[str] = Field(default=None, description="Original text from conversation")
-    source_message_ids: list[str] = Field(
+    
+    commitments: list[Commitment] = Field(
         default_factory=list,
-        description="IDs of messages where this payment was discussed"
+        description="Things vendor has committed to deliver (with deadlines if known)"
     )
-
-
-class OpenItem(BaseModel):
-    """Open item or follow-up needed."""
-    id: str = Field(description="Unique identifier for this open item")
-    description: str = Field(description="What needs to be resolved")
-    priority: Literal["high", "medium", "low"] = Field(description="Priority level")
-    source_message_ids: list[str] = Field(
+    
+    completed: list[str] = Field(
         default_factory=list,
-        description="IDs of related messages"
+        description="Things already done/delivered (simple strings)"
     )
-
-
-class SuggestedFollowup(BaseModel):
-    """Suggested follow-up action."""
-    date: Optional[str] = Field(default=None, description="ISO date string for suggested follow-up")
-    reason: Optional[str] = Field(default=None, description="Why follow-up is needed")
-
-
-class VendorSummary(BaseModel):
-    """High-level summary of vendor conversation."""
-    vendor_name: Optional[str] = Field(default=None, description="Vendor's name")
-    vendor_category: Optional[str] = Field(default=None, description="Vendor category (e.g., florist, caterer)")
-    conversation_summary: Optional[str] = Field(default=None, description="Brief summary of the conversation")
-    overall_status: Literal["on_track", "needs_attention", "at_risk"] = Field(
-        description="Overall status assessment"
+    
+    loose_threads: list[LooseThread] = Field(
+        default_factory=list,
+        description="Things discussed but not finalized, or left hanging"
     )
-    last_contact_date: Optional[str] = Field(default=None, description="ISO date string of last contact")
-    suggested_followup: Optional[SuggestedFollowup] = Field(
+    
+    pending_payment: Optional[PendingPayment] = Field(
         default=None,
-        description="Suggested follow-up if needed"
+        description="Payment info if discussed"
     )
-
-
-class ExtractionMetadata(BaseModel):
-    """Metadata about the extraction process."""
-    model: str = Field(description="LLM model used for extraction")
-    extracted_at: str = Field(description="ISO timestamp of extraction")
-    conversation_messages_count: int = Field(description="Number of messages processed")
-    upload_date_used: str = Field(description="Upload date used for relative date resolution")
-
-
-class VendorCommitmentExtraction(BaseModel):
-    """Complete extraction output schema."""
-    extraction_metadata: ExtractionMetadata
-    vendor_summary: VendorSummary
-    commitments: list[Commitment] = Field(default_factory=list)
-    payments: list[Payment] = Field(default_factory=list)
-    open_items: list[OpenItem] = Field(default_factory=list)
+    
+    next_action: Optional[str] = Field(
+        default=None,
+        description="Single most important next step, if any"
+    )
+    
+    risk_flag: bool = Field(
+        default=False,
+        description="True if there are red flags: missed commitments, unclear terms, payment issues"
+    )
