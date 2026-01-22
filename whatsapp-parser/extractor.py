@@ -99,7 +99,7 @@ def build_llm_payload(parsed_conversation: dict, max_messages: int = 20) -> dict
         {
             "id": msg["id"],
             "timestamp": msg["timestamp"],
-            "sender": "planner" if msg["is_planner"] else "vendor",
+            "sender": msg["sender"],
             "content": msg["content"]
         }
         for msg in parsed_conversation["messages"]
@@ -237,7 +237,7 @@ def extract_vendor_commitments(
 
     # Build prompt
     prompt = build_extraction_prompt(llm_payload, upload_date)
-
+    print("the prompt is", prompt)
     # Initialize LLM
     llm = ChatGroq(
         model=model,

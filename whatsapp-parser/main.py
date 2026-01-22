@@ -33,27 +33,18 @@ def main():
 
         print(f'✓ Successfully parsed {result["parsing_info"]["parsed_message_count"]} messages')
         print(f'✓ Output saved to {output_file}')
-
+        print("the result is", result)
         # Extract vendor commitments
         print(f'\n=== Extracting Vendor Commitments ===')
         print('Calling LLM to extract structured data...')
+        
         extraction_result = extract_vendor_commitments(result)
 
         print(f'\nWriting extraction output to {extraction_output_file}...')
         with open(extraction_output_file, 'w', encoding='utf-8') as f:
             json.dump(extraction_result, f, indent=2, ensure_ascii=False)
 
-        print(f'✓ Successfully extracted vendor commitments')
-        print(f'✓ Extraction saved to {extraction_output_file}')
-
-        # Display extraction summary
-        print(f'\n=== Extraction Summary ===')
-        print(f'Vendor: {extraction_result["vendor_summary"]["vendor_name"]}')
-        print(f'Category: {extraction_result["vendor_summary"]["vendor_category"]}')
-        print(f'Overall status: {extraction_result["vendor_summary"]["overall_status"]}')
-        print(f'Commitments found: {len(extraction_result["commitments"])}')
-        print(f'Payments discussed: {len(extraction_result["payments"])}')
-        print(f'Open items: {len(extraction_result["open_items"])}')
+    
 
     except FileNotFoundError:
         print(f'Error: {input_file} not found')
