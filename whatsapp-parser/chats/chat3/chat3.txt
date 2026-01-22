@@ -1,0 +1,58 @@
+{
+  "vendor_name": "Pushpa Flowers",
+  "vendor_category": "florist",
+  "summary": "Mehendi and haldi decorations confirmed. Varmala price negotiated to ₹13,000. Orchid bouquet availability confirmed on the third day of conversation for ₹4,500.",
+  "agreed_details": [
+    {
+      "category": "decor",
+      "detail": "mehendi",
+      "value": "₹8,000"
+    },
+    {
+      "category": "decor",
+      "detail": "haldi",
+      "value": "₹12,000"
+    },
+    {
+      "category": "decor",
+      "detail": "varmala",
+      "value": "₹13,000"
+    },
+    {
+      "category": "bouquet",
+      "detail": "orchid bouquet",
+      "value": "₹4,500"
+    }
+  ],
+  "commitments": [
+    {
+      "what": "Mehendi decorations",
+      "by_when": null,
+      "when_confidence": "vague",
+      "status": "agreed"
+    },
+    {
+      "what": "Haldi decorations",
+      "by_when": null,
+      "when_confidence": "vague",
+      "status": "agreed"
+    },
+    {
+      "what": "Varmala",
+      "by_when": null,
+      "when_confidence": "vague",
+      "status": "agreed"
+    },
+    {
+      "what": "Orchid bouquet",
+      "by_when": "2024-07-02T00:00:00+05:30",
+      "when_confidence": "exact",
+      "status": "agreed"
+    }
+  ],
+  "completed": [],
+  "loose_threads": [],
+  "pending_payment": null,
+  "next_action": "Discuss and finalize payment details for the decorations and bouquets.",
+  "risk_flag": false
+}

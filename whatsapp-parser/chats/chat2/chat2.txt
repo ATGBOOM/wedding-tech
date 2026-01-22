@@ -1,0 +1,35 @@
+[10/06/2024, 10:00:15] Priya Planner: Namaste Sharma ji
+[10/06/2024, 10:00:28] Priya Planner: Mehta wedding ke liye baat karni thi
+[10/06/2024, 10:00:41] Priya Planner: 15 July ko hai
+[10/06/2024, 10:05:02] Sharma Caterers: Haanji bilkul
+[10/06/2024, 10:05:18] Sharma Caterers: Kitne log honge?
+[10/06/2024, 10:06:33] Priya Planner: 250 guests
+[10/06/2024, 10:06:47] Priya Planner: Lunch aur dinner dono chahiye
+[10/06/2024, 10:15:22] Sharma Caterers: Lunch ke liye 450 per plate
+[10/06/2024, 10:15:38] Sharma Caterers: Dinner 650 per plate
+[10/06/2024, 10:15:51] Sharma Caterers: Ye veg menu hai
+[10/06/2024, 10:16:04] Sharma Caterers: Non-veg add karna ho toh +150 lagega
+[10/06/2024, 10:18:19] Priya Planner: Pure veg hi rakhna hai
+[10/06/2024, 10:18:32] Priya Planner: Total kitna hoga?
+[10/06/2024, 10:25:44] Sharma Caterers: 250 x 450 = 1,12,500 lunch
+[10/06/2024, 10:25:58] Sharma Caterers: 250 x 650 = 1,62,500 dinner
+[10/06/2024, 10:26:11] Sharma Caterers: Total: 2,75,000 + GST
+[10/06/2024, 10:28:05] Priya Planner: 2.5 lakh mein final kar sakte ho?
+[10/06/2024, 10:28:17] Priya Planner: GST included?
+[10/06/2024, 10:45:33] Sharma Caterers: Theek hai bhai
+[10/06/2024, 10:45:48] Sharma Caterers: 2.5 lakh pakka
+[10/06/2024, 10:46:02] Sharma Caterers: 50,000 advance de do booking confirm karne ke liye
+[10/06/2024, 10:48:15] Priya Planner: Done
+[10/06/2024, 10:48:29] Priya Planner: Kal tak transfer kar deta hun
+[10/06/2024, 10:48:41] Priya Planner: Menu card WhatsApp kar do
+[10/06/2024, 10:50:08] Sharma Caterers: Aaj shaam tak bhej deta hun menu options
+[11/06/2024, 11:00:22] Priya Planner: Bhaiya menu aaya nahi abhi tak
+[11/06/2024, 11:30:45] Sharma Caterers: Sorry bhai
+[11/06/2024, 11:30:58] Sharma Caterers: Abhi bhejta hun
+[11/06/2024, 11:32:14] Sharma Caterers: <attached: menu_card.pdf>
+[11/06/2024, 14:00:33] Priya Planner: Advance transfer kar diya
+[11/06/2024, 14:00:47] Priya Planner: Screenshot bhej raha hun
+[11/06/2024, 14:01:02] Priya Planner: <attached: payment_screenshot.jpg>
+[11/06/2024, 14:15:19] Sharma Caterers: Received
+[11/06/2024, 14:15:31] Sharma Caterers: Thank you
+[11/06/2024, 14:15:48] Sharma Caterers: Balance 2 lakh function se 2 din pehle de dena
